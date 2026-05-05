@@ -2,13 +2,14 @@ using UnityEngine;
 
 /// <summary>
 /// Компонент врага для проверки видимости игрока.
+/// (Исправлена ошибка с eyePos)
 /// </summary>
 public class EnemyVision : MonoBehaviour
 {
     [Header("Vision Settings")]
     [SerializeField] private float viewRadius = 10f;
     [SerializeField] private float viewAngle = 90f;
-    [SerializeField] private LayerMask obstacleMask; // Слои, блокирующие обзор
+    [SerializeField] private LayerMask obstacleMask; // Слой стен и укрытий
     [SerializeField] private LayerMask targetMask;   // Слой игрока
 
     private Transform player;
@@ -16,10 +17,7 @@ public class EnemyVision : MonoBehaviour
 
     private void Start()
     {
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
-
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
         stateMachine = GetComponent<EnemyStateMachine>();
     }
 
@@ -27,39 +25,55 @@ public class EnemyVision : MonoBehaviour
     {
         if (player == null || stateMachine == null) return;
 
-        Vector3 directionToPlayer = (player.position - transform.position).normalized;
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        Vector3 dirToPlayer = (player.position - transform.position).normalized;
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // 1. Проверка расстояния
-        if (distanceToPlayer <= viewRadius)
+        // Объявляем eyePos СНАЧАЛА, чтобы он был виден везде в методе
+        Vector3 eyePos = transform.position + Vector3.up * 1.5f;
+
+        bool canSeePlayer = false;
+
+        // 1. Проверка дистанции и угла
+        if (distToPlayer <= viewRadius)
         {
-            // 2. Проверка угла обзора
-            float angle = Vector3.Angle(transform.forward, directionToPlayer);
+            float angle = Vector3.Angle(transform.forward, dirToPlayer);
             if (angle <= viewAngle * 0.5f)
             {
-                // 3. Проверка прямой видимости (луч не должен упираться в препятствия)
-                if (!Physics.Raycast(transform.position, directionToPlayer, distanceToPlayer, obstacleMask))
+                // 2. Raycast от "глаз" врага
+                // Если луч НЕ встречает препятствий -> игрок виден
+                if (!Physics.Raycast(eyePos, dirToPlayer, distToPlayer, obstacleMask))
                 {
-                    // Игрок виден ? отправляем сигнал машине состояний
-                    stateMachine.OnPlayerDetected(player.position);
+                    canSeePlayer = true;
                 }
             }
         }
+
+        // 3. Передача состояния в машину состояний
+        if (canSeePlayer)
+        {
+            stateMachine.OnPlayerDetected(player.position);
+        }
+        else
+        {
+            // Сообщаем, что потеряли игрока из виду
+            stateMachine.OnPlayerLost();
+        }
+
+        // 4. Отладка: зелёный луч = видит, красный = не видит
+        Debug.DrawLine(eyePos, player.position, canSeePlayer ? Color.green : Color.red);
     }
 
-    // Визуализация конуса в редакторе (при выделении объекта)
+    // Визуализация конуса в редакторе
     private void OnDrawGizmosSelected()
     {
-        // Сфера радиуса обзора
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, viewRadius);
 
-        // Границы угла обзора
-        Vector3 leftBoundary = Quaternion.Euler(0, -viewAngle * 0.5f, 0) * transform.forward * viewRadius;
-        Vector3 rightBoundary = Quaternion.Euler(0, viewAngle * 0.5f, 0) * transform.forward * viewRadius;
+        Vector3 left = Quaternion.Euler(0, -viewAngle * 0.5f, 0) * transform.forward * viewRadius;
+        Vector3 right = Quaternion.Euler(0, viewAngle * 0.5f, 0) * transform.forward * viewRadius;
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(transform.position, transform.position + leftBoundary);
-        Gizmos.DrawLine(transform.position, transform.position + rightBoundary);
+        Gizmos.DrawLine(transform.position, transform.position + left);
+        Gizmos.DrawLine(transform.position, transform.position + right);
     }
 }
