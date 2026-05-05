@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 /// <summary>
 /// —татический класс дл€ управлени€ шумом: хранит источники шума и уведомл€ет врагов.
-/// (јдаптировано из методички, раздел 7.2)
 /// </summary>
 public static class NoiseManager
 {

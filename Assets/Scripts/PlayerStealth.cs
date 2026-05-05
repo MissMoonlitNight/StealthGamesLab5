@@ -2,7 +2,6 @@ using UnityEngine;
 
 /// <summary>
 /// Компонент игрока для стелс-режима: приседание, генерация шума.
-/// (Адаптировано из методички, раздел 7.1)
 /// </summary>
 public class PlayerStealth : MonoBehaviour
 {

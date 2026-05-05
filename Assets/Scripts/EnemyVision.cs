@@ -2,7 +2,6 @@ using UnityEngine;
 
 /// <summary>
 /// Компонент врага для проверки видимости игрока.
-/// (Исправлена ошибка с eyePos)
 /// </summary>
 public class EnemyVision : MonoBehaviour
 {
@@ -28,7 +27,6 @@ public class EnemyVision : MonoBehaviour
         Vector3 dirToPlayer = (player.position - transform.position).normalized;
         float distToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // Объявляем eyePos СНАЧАЛА, чтобы он был виден везде в методе
         Vector3 eyePos = transform.position + Vector3.up * 1.5f;
 
         bool canSeePlayer = false;
@@ -38,9 +36,7 @@ public class EnemyVision : MonoBehaviour
         {
             float angle = Vector3.Angle(transform.forward, dirToPlayer);
             if (angle <= viewAngle * 0.5f)
-            {
-                // 2. Raycast от "глаз" врага
-                // Если луч НЕ встречает препятствий -> игрок виден
+            { 
                 if (!Physics.Raycast(eyePos, dirToPlayer, distToPlayer, obstacleMask))
                 {
                     canSeePlayer = true;

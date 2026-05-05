@@ -2,8 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// ќтображает текущий уровень скрытности игрока (зелЄный Ц безопасно, красный Ц обнаружен).
-/// (јдаптировано из методички, раздел 7.5)
+/// ќтображает текущий уровень скрытности игрока .
 /// </summary>
 public class StealthIndicator : MonoBehaviour
 {
